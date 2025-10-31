@@ -1,0 +1,26 @@
+// frontend/src/App.tsx
+import { useState, useEffect } from 'react';
+// ...
+
+export default function App() {
+  const [guides, setGuides] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch('http://localhost/api/guides') // 注意: 使用 Nginx 的 80 埠
+      .then(res => res.json())
+      .then(data => setGuides(data))
+      .catch(error => console.error("Error fetching guides:", error));
+  }, []);
+
+  return (
+    <div>
+      <h1>🏆 遊戲攻略網站</h1>
+      {guides.map((guide: any) => (
+        <div key={guide.id}>
+          <h2>{guide.title}</h2>
+          <p>{guide.content}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
