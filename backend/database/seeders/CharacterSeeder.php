@@ -117,7 +117,70 @@ class CharacterSeeder extends Seeder
             ],
         ];
 
-        // Insert sample characters
-        Character::insert($characters);
+        // Attempt to fetch official Chinese names from Hoyoverse; fallback to placeholders when necessary
+        $names = [];
+        try {
+            $html = @file_get_contents('https://zenless.hoyoverse.com/zh-tw/characters');
+            if ($html !== false) {
+                if (preg_match_all('/>\s*([\x{4e00}-\x{9fff}]{2,8})\s*</u', $html, $m)) {
+                    $cand = array_map('trim', $m[1]);
+                    $filterOut = ['絕區零', '角色', '角色列表'];
+                    foreach ($cand as $c) {
+                        if (in_array($c, $filterOut)) continue;
+                        if (mb_strlen($c) < 2) continue;
+                        if (!in_array($c, $names)) $names[] = $c;
+                        if (count($names) >= 34) break;
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // ignore, will fallback
+        }
+
+        if (count($names) < 34) {
+            for ($i = count($names) + 1; $i <= 34; $i++) {
+                $names[] = '絕區零_角色_' . $i;
+            }
+        }
+
+        // Prepare new records for ids 9..42
+        $tiers = ['S','A','B','C'];
+        $elements = ['Pyro','Hydro','Anemo','Electro','Cryo','Geo'];
+        $weapons = ['Sword','Bow','Polearm','Catalyst','Dagger'];
+        $roles = ['DPS','Support','Healer','Sub-DPS'];
+
+        $new = [];
+        $id = 9;
+        foreach ($names as $n) {
+            if ($id > 42) break;
+            $new[] = [
+                'id' => $id,
+                'name_cn' => $n,
+                'name_en' => null,
+                'tier' => $tiers[array_rand($tiers)],
+                'element' => $elements[array_rand($elements)],
+                'weapon_type' => $weapons[array_rand($weapons)],
+                'role' => $roles[array_rand($roles)],
+                'description' => null,
+                'image_url' => 'src/assets/placeholder_'.$id.'.webp',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+            $id++;
+        }
+
+        // Insert existing sample characters first (they don't include explicit IDs)
+        if (!empty($characters)) {
+            foreach (array_chunk($characters, 50) as $chunk) {
+                Character::insertOrIgnore($chunk);
+            }
+        }
+
+        // Then insert new records with explicit ids (9..42)
+        if (!empty($new)) {
+            foreach (array_chunk($new, 50) as $chunk) {
+                Character::insertOrIgnore($chunk);
+            }
+        }
     }
 }
