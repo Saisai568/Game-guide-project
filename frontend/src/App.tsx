@@ -6,7 +6,8 @@ export default function App() {
   const [guides, setGuides] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch('http://localhost/api/guides') // 注意: 使用 Nginx 的 80 埠
+    // Use a relative URL so Vite dev server can proxy `/api` to the backend and avoid CORS
+    fetch('/api/guides')
       .then(res => res.json())
       .then(data => setGuides(data))
       .catch(error => console.error("Error fetching guides:", error));
