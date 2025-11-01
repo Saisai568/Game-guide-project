@@ -4,12 +4,14 @@ import type { Filters } from '../App';
 
 type Character = {
   id: number;
-  name: string;
-  image?: string;
+  name_cn: string;
+  name_en?: string | null;
+  image_url?: string;
   element?: string;
   tier?: string;
   role?: string;
-  weapon?: string;
+  weapon_type?: string;
+  description?: string | null;
 };
 
 const CharacterGrid: React.FC<{ filters: Filters; searchTerm: string }> = ({ filters, searchTerm }) => {
@@ -33,9 +35,9 @@ const CharacterGrid: React.FC<{ filters: Filters; searchTerm: string }> = ({ fil
         // Fallback placeholder data so UI still renders in dev
         if (mounted) {
           setCharacters([
-            { id: 1, name: '魈', element: 'Anemo', tier: 'S', weapon: 'Polearm', role: 'DPS', image: '' },
-            { id: 2, name: '楓原萬葉', element: 'Anemo', tier: 'A', weapon: 'Sword', role: 'Support', image: '' },
-            { id: 3, name: '晴', element: 'Electro', tier: 'S', weapon: 'Sword', role: 'DPS', image: '' },
+            { id: 1, name_cn: '魈', name_en: 'Xiao', element: 'Anemo', tier: 'S', weapon_type: 'Polearm', role: 'DPS', image_url: '' },
+            { id: 2, name_cn: '楓原萬葉', name_en: 'Kaedehara Kazuha', element: 'Anemo', tier: 'A', weapon_type: 'Sword', role: 'Support', image_url: '' },
+            { id: 3, name_cn: '晴', name_en: 'Sangonomiya Kokomi', element: 'Hydro', tier: 'S', weapon_type: 'Catalyst', role: 'Healer', image_url: '' },
           ]);
           setLoading(false);
         }
@@ -51,17 +53,17 @@ const CharacterGrid: React.FC<{ filters: Filters; searchTerm: string }> = ({ fil
       if (filters.tier && c.tier !== filters.tier) return false;
 
       if (filters.attributes.length) {
-        // all attributes are OR'd: if any attribute is present, pass
+        // attributes are treated as OR across element, weapon_type, or role
         const matchesAttr = filters.attributes.every(attr => {
-          // match by element, weapon or role
-          return c.element === attr || c.weapon === attr || c.role === attr;
+          return c.element === attr || c.weapon_type === attr || c.role === attr;
         });
         if (!matchesAttr) return false;
       }
 
       if (searchTerm.trim()) {
         const q = searchTerm.toLowerCase();
-        if (!c.name.toLowerCase().includes(q)) return false;
+        const name = ((c.name_cn || '') + ' ' + (c.name_en || '')).toLowerCase();
+        if (!name.includes(q)) return false;
       }
 
       return true;
