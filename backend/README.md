@@ -1,59 +1,143 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Backend（Laravel）
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+此目錄包含專案的 Laravel 後端程式碼與相關設定。本 README 說明開發環境設定、啟動流程，以及如何執行自動化測試（unit / feature）。
 
-## About Laravel
+## 目標
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- 建立並執行後端應用
+- 提供資料庫遷移與種子（seed）說明
+- 明確說明如何執行自動化測試並在 CI 中運行
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 前置需求
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 版本：建議 PHP 8.1+（依 `composer.json` 與系統需求調整）
+- Composer
+- (選用) Docker / docker-compose（專案根目錄有 `docker-compose.yml`）
+- 資料庫：SQLite、MySQL 或 Postgres（請檢查 `config/database.php`）
 
-## Learning Laravel
+## 快速安裝（本機開發）
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+在專案 `backend/` 目錄下執行：
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```powershell
+# 安裝 PHP 套件
+composer install
 
-## Laravel Sponsors
+# 複製環境範本並產生 APP key
+copy .env.example .env
+php artisan key:generate
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+# 執行遷移並（選擇性）填充測試資料
+php artisan migrate --seed
 
-### Premium Partners
+# 啟動開發 server（或使用 Docker）
+php artisan serve --host=127.0.0.1 --port=8000
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+如果使用 Docker：在專案根目錄執行 `docker-compose up -d`，然後：
 
-## Contributing
+```powershell
+docker-compose exec backend bash
+# 進入容器後可執行上面相同的 artisan / composer 命令
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 環境變數與資料庫
 
-## Code of Conduct
+- 編輯 `.env` 設定資料庫連線。範例（SQLite）：
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```ini
+DB_CONNECTION=sqlite
+DB_DATABASE=/path/to/database.sqlite
+```
 
-## Security Vulnerabilities
+若使用 MySQL / Postgres，請設定相對應的 `DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD`。
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 測試（重要）
 
-## License
+此專案使用 Laravel 的測試工具與 phpunit。測試檔位於 `tests/` 中（Unit 與 Feature）。下列為常見的測試執行方式：
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 使用 Artisan（建議）
+
+```powershell
+# 執行整套測試（會跑 phpunit）
+php artisan test
+
+# 顯示更詳細的輸出（視專案而定）
+php artisan test --parallel --testsuite=Feature
+```
+
+### 使用 phpunit（直接執行）
+
+```powershell
+# Windows: 使用 vendor 提供的執行檔
+vendor\bin\phpunit.bat
+
+# 或 (Linux/macOS 或 WSL)
+./vendor/bin/phpunit
+
+# 執行單一測試類或含特定範例的測試
+vendor\bin\phpunit.bat --filter MyTestClass
+```
+
+### 在 Docker 容器中執行測試
+
+```powershell
+docker-compose exec backend php artisan test
+```
+
+測試注意事項：
+
+- 測試執行時會使用測試資料庫（請確認 `phpunit.xml` 中的設定，或在測試前建立測試用的 sqlite 檔案）。
+- 若你需要查看程式碼覆蓋率，需要安裝並啟用 Xdebug 或 PCOV，並使用 phpunit 的 `--coverage` 選項。
+
+## 常用測試指令小結
+
+```powershell
+# 執行所有測試
+php artisan test
+
+# 使用 phpunit（Windows）
+vendor\bin\phpunit.bat
+
+# 執行單一測試檔或範例
+php artisan test --filter=ExampleTest
+```
+
+## CI / GitHub Actions 範例（簡短）
+
+在 CI 中通常會做：安裝依賴、建立 `.env`、執行遷移、執行測試。下面為簡化示意（放到 `.github/workflows/ci.yml`）：
+
+```yaml
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+      - run: composer install --prefer-dist --no-progress --no-suggest
+      - run: cp .env.example .env
+      - run: php artisan key:generate
+      - run: php artisan migrate --env=testing --no-interaction
+      - run: php artisan test --no-interaction --verbose
+```
+
+(依專案 CI 需求可再調整)
+
+## 偵錯與常見問題
+
+- 若測試找不到資料庫或連線錯誤，請檢查 `phpunit.xml` 與 `.env.testing` 的 DB 設定。
+- 如果 migration 或 seeder 失敗，先在本機執行 `php artisan migrate:fresh --seed` 以清空並重建資料表。
+
+## 參考與聯絡
+
+- 參考：Laravel 官方文件（[https://laravel.com/docs](https://laravel.com/docs)）
+- 若需幫忙，請建立 issue 或直接聯絡專案維護者。
+
+---
+
+最後更新：2025-11-02
